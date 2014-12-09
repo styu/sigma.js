@@ -352,14 +352,16 @@
 
     function overNode(e) {
       var node = e.data.node,
-          embedSettings = self.settings.embedObjects({
-            prefix: prefix
-          });
+        embedSettings = self.settings.embedObjects({
+          prefix: prefix
+        });
 
       if (!embedSettings('enableHovering'))
         return;
 
-      if (containsChildNode(self.domElements.groups.hovers, self.domElements.hovers[node.id])) {
+      if (containsChildNode(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[node.id])) {
         return;
       }
 
@@ -379,15 +381,17 @@
 
     function outNode(e) {
       var node = e.data.node,
-          embedSettings = self.settings.embedObjects({
-            prefix: prefix
-          });
+        embedSettings = self.settings.embedObjects({
+          prefix: prefix
+        });
 
       if (!embedSettings('enableHovering'))
         return;
 
       // Deleting element
-      if (containsChildNode(self.domElements.groups.hovers, self.domElements.hovers[node.id])) {
+      if (containsChildNode(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[node.id])) {
         self.domElements.groups.hovers.removeChild(
           self.domElements.hovers[node.id]
         );
@@ -403,15 +407,19 @@
     }
 
     function containsChildNode(parentNode, childNode) {
-      if (parentNode == null || parentNode.childElementCount === 0 || childNode == null) {
+      if (parentNode === null || parent === undefined ||
+          parentNode.childElementCount === 0 ||
+          childNode === null || childNode === undefined) {
         return false;
       }
 
-      if (parentNode.contains != null) {
+      if (parentNode.contains !== null && parentNode.contains !== undefined) {
         return parentNode.contains(childNode);
       }
 
-      for (var i = 0, childNodes = parentNode.childNodes; i < childNodes.length; i ++) {
+      for (var i = 0, childNodes = parentNode.childNodes;
+           i < childNodes.length;
+           i++) {
         if (childNodes[i] === childNode) {
           return true;
         }
@@ -430,14 +438,16 @@
 
     function setHoverElementsVisibility(e, visible) {
       var node = e.data.node;
-      if (node == null || self.domElements.hovers[node.id] == null ||
-        self.domElements.hovers[node.id].parentNode.childElementCount === 0) {
+      if (node === null || node === undefined ||
+          self.domElements.hovers[node.id] === null ||
+          self.domElements.hovers[node.id] === undefined ||
+          self.domElements.hovers[node.id].parentNode.childElementCount === 0) {
         return;
       }
 
       var childNodes = self.domElements.hovers[node.id].childNodes;
-      var visibility = visible ? "visible" : "hidden";
-      for (var i = 0; i < childNodes.length; i ++) {
+      var visibility = visible ? 'visible' : 'hidden';
+      for (var i = 0; i < childNodes.length; i++) {
         var childClass = childNodes[i].getAttribute('class');
         if (childClass.indexOf(self.settings('classPrefix') + '-node') < 0) {
           childNodes[i].style.visibility = visibility;
@@ -457,7 +467,9 @@
       }
 
       // Deleting element before update
-      if (containsChildNode(self.domElements.groups.hovers, self.domElements.hovers[hoveredNode.id])) {
+      if (containsChildNode(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[hoveredNode.id])) {
         self.domElements.groups.hovers.removeChild(
           self.domElements.hovers[hoveredNode.id]
         );
