@@ -30,7 +30,6 @@
   "homepage": "https://github.com/jacomyal/sigma.js",
   "ignore": [
     "**/.*",
-    ".components",
     "CHANGELOG.md",
     "CONTRIBUTING.draft.md",
     "examples",
