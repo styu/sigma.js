@@ -62,6 +62,7 @@
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
+      circle.setAttributeNS(null, 'pointer-events', 'none');
 
       group.appendChild(circle);
 
@@ -151,6 +152,7 @@
         text.setAttributeNS(null, 'font-size', fontSize);
         text.setAttributeNS(null, 'font-family', settings('font'));
         text.setAttributeNS(null, 'fill', fontColor);
+        text.setAttributeNS(null, 'pointer-events', 'none');
 
         // Hover Rectangle
         rectangle.setAttributeNS(
@@ -166,6 +168,7 @@
           rectangle.setAttributeNS(null, 'stroke-width', 2);
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
+          rectangle.setAttributeNS(null, 'pointer-events', 'none');
         }
 
         // Appending childs
