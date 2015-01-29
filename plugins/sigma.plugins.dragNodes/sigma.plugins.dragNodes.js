@@ -61,6 +61,10 @@
       _isMouseOverCanvas = false,
       _drag = false;
 
+    if (renderer instanceof sigma.renderers.svg) {
+        _mouse = renderer.container.firstChild;
+    }
+
     // It removes the initial substring ('read_') if it's a WegGL renderer.
     if (renderer instanceof sigma.renderers.webgl) {
       _prefix = renderer.options.prefix.substr(5);
@@ -145,7 +149,11 @@
     function nodeMouseDown(event) {
       _isMouseDown = true;
       var size = _s.graph.nodes().length;
-      if (_node && size > 0) {
+
+      // when there is only node in the graph, the plugin cannot apply
+      // linear interpolation. So treat it as if a user is dragging
+      // the graph
+      if (_node && size > 1) {
         _mouse.removeEventListener('mousedown', nodeMouseDown);
         _body.addEventListener('mousemove', nodeMouseMove);
         _body.addEventListener('mouseup', nodeMouseUp);
@@ -219,12 +227,16 @@
 
       function executeNodeMouseMove() {
         var offset = calculateOffset(_renderer.container),
-            x = event.clientX - offset.left,
-            y = event.clientY - offset.top,
-            cos = Math.cos(_camera.angle),
-            sin = Math.sin(_camera.angle),
-            nodes = _s.graph.nodes(),
-            ref = [];
+          x = event.clientX - offset.left,
+          y = event.clientY - offset.top,
+          cos = Math.cos(_camera.angle),
+          sin = Math.sin(_camera.angle),
+          nodes = _s.graph.nodes(),
+          ref = [],
+          renXDiff,
+          renYDiff,
+          xDiff,
+          yDiff;
 
         // Getting and derotating the reference coordinates.
         for (var i = 0; i < 2; i++) {
@@ -238,11 +250,34 @@
           ref.push(aux);
         }
 
+        renXDiff = ref[1].renX - ref[0].renX;
+        xDiff = ref[1].x - ref[0].x;
+
         // Applying linear interpolation.
-        x = ((x - ref[0].renX) / (ref[1].renX - ref[0].renX)) *
-          (ref[1].x - ref[0].x) + ref[0].x;
-        y = ((y - ref[0].renY) / (ref[1].renY - ref[0].renY)) *
-          (ref[1].y - ref[0].y) + ref[0].y;
+        if (renXDiff === 0 && xDiff === 0) {
+          // if both are equal to 0, use 1 as the division result
+          x = x - ref[0].renX + ref[0].x;
+        } else {
+          // use a really small number
+          if (renXDiff === 0) {
+            renXDiff = Number.MIN_VALUE;
+          }
+
+          x = (x - ref[0].renX) / renXDiff * xDiff + ref[0].x;
+        }
+
+        renYDiff = ref[1].renY - ref[0].renY;
+        yDiff = ref[1].y - ref[0].y;
+
+        if (renYDiff === 0 && yDiff === 0) {
+          y = y - ref[0].renY + ref[0].y;
+        } else {
+          if (renYDiff === 0) {
+            renYDiff = Number.MIN_VALUE;
+          }
+
+          y = (y - ref[0].renY) / renYDiff * yDiff + ref[0].y;
+        }
 
         // Rotating the coordinates.
         _node.x = x * cos - y * sin;

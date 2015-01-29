@@ -35,6 +35,9 @@
 
     sigma.classes.dispatcher.extend(this);
 
+    // Initialize pointer-events polyfill for cross-browser support
+    PointerEventsPolyfill.initialize({});
+
     // Initialize main attributes:
     this.graph = graph;
     this.camera = camera;
@@ -207,6 +210,9 @@
     //-- Second we update the nodes
     if (drawNodes)
       for (a = this.nodesOnScreen, i = 0, l = a.length; i < l; i++) {
+
+        if (a[i].hidden)
+          continue;
 
         // Node
         (renderers[a[i].type] || renderers.def).update(

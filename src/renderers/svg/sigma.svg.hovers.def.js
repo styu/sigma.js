@@ -53,8 +53,11 @@
 
       if (typeof node.label === 'string' && node.lable !== '') {
         // Text
-        text.textContent =  node.label;
-        text.setAttributeNS(null, 'class', settings('classPrefix') + '-hover-label');
+        text.textContent = node.label;
+        text.setAttributeNS(
+            null,
+            'class',
+            settings('classPrefix') + '-hover-label');
         text.setAttributeNS(null, 'font-size', fontSize);
         text.setAttributeNS(null, 'font-family', settings('font'));
         text.setAttributeNS(null, 'fill', fontColor);
@@ -62,6 +65,7 @@
           Math.round(node[prefix + 'x'] + size + 3));
         text.setAttributeNS(null, 'y',
           Math.round(node[prefix + 'y'] + fontSize / 3));
+        text.setAttributeNS(null, 'pointer-events', 'none');
 
         // Measures
         // OPTIMIZE: Find a better way than a measurement canvas
@@ -75,19 +79,27 @@
         e = Math.round(fontSize / 2 + 2);
 
         // Circle
-        circle.setAttributeNS(null, 'class', settings('classPrefix') + '-hover-area')
+        circle.setAttributeNS(
+            null,
+            'class',
+            settings('classPrefix') + '-hover-area');
         circle.setAttributeNS(null, 'fill', '#fff');
         circle.setAttributeNS(null, 'cx', node[prefix + 'x']);
         circle.setAttributeNS(null, 'cy', node[prefix + 'y']);
         circle.setAttributeNS(null, 'r', e);
+        circle.setAttributeNS(null, 'pointer-events', 'none');
 
         // Rectangle
-        rectangle.setAttributeNS(null, 'class', settings('classPrefix') + '-hover-area')
+        rectangle.setAttributeNS(
+            null,
+            'class',
+            settings('classPrefix') + '-hover-area');
         rectangle.setAttributeNS(null, 'fill', '#fff');
         rectangle.setAttributeNS(null, 'x', node[prefix + 'x'] + e / 4);
         rectangle.setAttributeNS(null, 'y', node[prefix + 'y'] - e);
         rectangle.setAttributeNS(null, 'width', w);
         rectangle.setAttributeNS(null, 'height', h);
+        rectangle.setAttributeNS(null, 'pointer-events', 'none');
       }
 
       // Appending childs
