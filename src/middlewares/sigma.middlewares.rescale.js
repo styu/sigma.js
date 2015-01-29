@@ -112,11 +112,11 @@
         h / Math.max(maxY - minY, 1)
       );
 
-    // save the initial scale and use it if autoScale is set to false or
-    // nodePosition is not specified in the setting
     if (np) {
+      // if nodePosition is specified
       this.graph.initScale = null;
     } else {
+      // save initScale
       if (!this.graph.initScale) {
         this.graph.initScale = scale;
       }
