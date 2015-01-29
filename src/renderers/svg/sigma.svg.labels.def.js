@@ -38,7 +38,6 @@
       text.setAttributeNS(null, 'fill', fontColor);
       text.setAttributeNS(null, 'pointer-events', 'none');
 
-      text.innerHTML = node.label;
       text.textContent = node.label;
 
       return text;
@@ -71,6 +70,7 @@
         Math.round(node[prefix + 'x'] + size + 3));
       text.setAttributeNS(null, 'y',
         Math.round(node[prefix + 'y'] + fontSize / 3));
+      text.textContent = node.label;
 
       // Showing
       text.style.display = '';
