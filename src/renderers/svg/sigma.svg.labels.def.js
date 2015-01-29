@@ -75,7 +75,7 @@
       if (!settings('forceLabels') && size < settings('labelThreshold'))
         return;
 
-      if (typeof node.label !== 'string')
+      if (typeof node.label !== 'string' || node.label === '')
         return;
 
       if (settings('labelAlignment') === undefined) {
