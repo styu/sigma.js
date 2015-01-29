@@ -117,8 +117,9 @@
     if (np) {
       this.graph.initScale = null;
     } else {
-      if (!this.graph.initScale)
-      this.graph.initScale = scale;
+      if (!this.graph.initScale) {
+        this.graph.initScale = scale;
+      }
     }
 
     // Size homothetic parameters:
