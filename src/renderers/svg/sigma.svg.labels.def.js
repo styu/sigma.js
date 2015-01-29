@@ -37,7 +37,6 @@
       text.setAttributeNS(null, 'font-family', settings('font'));
       text.setAttributeNS(null, 'fill', fontColor);
 
-      text.innerHTML = node.label;
       text.textContent = node.label;
 
       return text;
@@ -117,7 +116,6 @@
         Math.round(node[prefix + 'x'] + labelOffsetX));
       text.setAttributeNS(null, 'y',
         Math.round(node[prefix + 'y'] + labelOffsetY));
-      text.innerHTML = node.label;
       text.textContent = node.label;
 
       // Showing
