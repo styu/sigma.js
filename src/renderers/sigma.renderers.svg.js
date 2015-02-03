@@ -351,15 +351,18 @@
         renderers = sigma.svg.hovers,
         self = this;
 
+    function updateLastKnownPos(node) {
+      lastKnownPos.x = node[prefix + 'x'];
+      lastKnownPos.y = node[prefix + 'y'];
+    }
+
     function overNode(e) {
       var node = e.data.node,
           embedSettings = self.settings.embedObjects({
             prefix: prefix
           });
 
-      lastKnownPos.x = node[prefix + 'x'];
-      lastKnownPos.y = node[prefix + 'y'];
-
+      updateLastKnownPos(node);
       if (!embedSettings('enableHovering'))
         return;
 
@@ -369,13 +372,14 @@
         return;
       }
 
-      var hover = (renderers[node.type] || renderers.def).create(
+      var hoverRenderer = (renderers[node.type] || renderers.def);
+      var hover = hoverRenderer.create(
         node,
         self.domElements.nodes[node.id],
         embedSettings
       );
 
-      (renderers[node.type] || renderers.def).update(
+      hoverRenderer.update(
         node,
         hover,
         self.measurementCanvas,
@@ -395,8 +399,7 @@
             prefix: prefix
           });
 
-      lastKnownPos.x = node[prefix + 'x'];
-      lastKnownPos.y = node[prefix + 'y'];
+      updateLastKnownPos(node);
 
       if (!embedSettings('enableHovering'))
         return;
@@ -429,8 +432,7 @@
 
     function setHoverElementsVisibility(e, visible) {
       var node = e.data.node;
-      lastKnownPos.x = node[prefix + 'x'];
-      lastKnownPos.y = node[prefix + 'y'];
+      updateLastKnownPos(node);
 
       if (!node || !self.domElements.hovers[node.id]) {
         return;
@@ -455,10 +457,11 @@
         return;
       }
 
+      var hoverRenderer = (renderers[hoveredNode.type] || renderers.def);
       if (!sigma.svg.utils.containsChild(
           self.domElements.groups.hovers,
           self.domElements.hovers[hoveredNode.id])) {
-        var hover = (renderers[hoveredNode.type] || renderers.def).create(
+        var hover = hoverRenderer.create(
           hoveredNode,
           self.domElements.nodes[hoveredNode.id],
           embedSettings
@@ -470,7 +473,7 @@
         self.domElements.groups.hovers.appendChild(hover);
       }
 
-      (renderers[hoveredNode.type] || renderers.def).update(
+      hoverRenderer.update(
         hoveredNode,
         self.domElements.hovers[hoveredNode.id],
         self.measurementCanvas,
