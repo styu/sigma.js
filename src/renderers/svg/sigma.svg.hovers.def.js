@@ -22,10 +22,89 @@
      * @param  {DOMElement}       nodeCircle         The node DOM Element.
      * @param  {configurable}     settings           The settings function.
      */
-    create: function(node, nodeCircle, measurementCanvas, settings) {
+    create: function(node, nodeCircle, settings) {
+      // Creating elements
+      var circle = document.createElementNS(settings('xmlns'), 'circle'),
+          group = document.createElementNS(settings('xmlns'), 'g'),
+          prefix = settings('prefix') || '';
 
-      // Defining visual properties
-      var labelWidth,
+      // Defining properties
+      group.setAttributeNS(null, 'class', settings('classPrefix') + '-hover');
+      group.setAttributeNS(null, 'data-node-id', node.id);
+
+      // drawing hover circle
+      circle.setAttributeNS(
+        null,
+        'class',
+        settings('classPrefix') + '-hover-node-border');
+      circle.setAttributeNS(null, 'fill', '#fff');
+      circle.setAttributeNS(null, 'stroke', '#000');
+      circle.setAttributeNS(null, 'stroke-opacity', '0.3');
+      circle.setAttributeNS(null, 'stroke-width', 2);
+      circle.setAttributeNS(null, 'pointer-events', 'none');
+
+      group.appendChild(circle);
+
+      if (typeof node.label === 'string' && node.label !== '') {
+        // Text
+        var fontColor = (settings('labelHoverColor') === 'node') ?
+              (node.color || settings('defaultNodeColor')) :
+              settings('defaultLabelHoverColor'),
+            fontSize = (settings('labelSize') === 'fixed') ?
+              settings('defaultLabelSize') :
+              settings('labelSizeRatio') * node[prefix + 'size'],
+            rectangle = document.createElementNS(settings('xmlns'), 'rect'),
+            text = document.createElementNS(settings('xmlns'), 'text');
+
+        text.setAttributeNS(
+          null,
+          'class',
+          settings('classPrefix') + '-hover-label');
+        text.setAttributeNS(null, 'font-size', fontSize);
+        text.setAttributeNS(null, 'font-family', settings('font'));
+        text.setAttributeNS(null, 'fill', fontColor);
+        text.setAttributeNS(null, 'pointer-events', 'none');
+        text.textContent = node.label;
+
+        // Hover Rectangle
+        rectangle.setAttributeNS(
+          null,
+          'class',
+          settings('classPrefix') + '-hover-label-border');
+        rectangle.setAttributeNS(null, 'fill', '#fff');
+        rectangle.setAttributeNS(null, 'stroke', '#000');
+        rectangle.setAttributeNS(null, 'stroke-opacity', '0.3');
+        rectangle.setAttributeNS(null, 'stroke-width', 2);
+        rectangle.setAttributeNS(null, 'pointer-events', 'none');
+
+        // Appending childs
+        group.appendChild(rectangle);
+        group.appendChild(nodeCircle);
+        group.appendChild(text);
+      } else {
+        group.appendChild(nodeCircle);
+      }
+
+      return group;
+    },
+
+    /**
+     * SVG Hover Element Update.
+     *
+     * @param  {object}           node               The node object.
+     * @param  {DOMElement}       group              The parent node containing
+     *                            all hover elements.
+     * @param  {CanvasElement}    measurementCanvas  A fake canvas handled by
+     *                            the svg to perform some measurements and
+     *                            passed by the renderer.
+     * @param  {configurable}     settings           The settings function.
+     * @param  {object}           lastKnownPos       The last known position of
+     *                            the hovered node moved by the mouse
+     */
+    update: function(node, group, measurementCanvas, settings, lastKnownPos) {
+      var circle,
+          classPrefix = settings('classPrefix'),
+          distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
           prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
@@ -36,69 +115,57 @@
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-       // set context font and font size
-      measurementCanvas.font = (fontStyle ? fontStyle + ' ' : '') +
-        fontSize + 'px ' + (settings('hoverFont') || settings('font'));
+      if (!group.getElementsByClassName(classPrefix + '-hover-node-border')) {
+        return;
+      }
 
-      labelWidth = measurementCanvas.measureText(node.label).width;
+      // with forced field applied, the node may get moved.
+      // if the hovered node is not within the radius of the last known
+      // position, the hovered area should be hidden
+      if (lastKnownPos && lastKnownPos.x && lastKnownPos.y) {
+        distanceTraveled = Math.sqrt(Math.pow(x - lastKnownPos.x, 2) +
+          Math.pow(y - lastKnownPos.y, 2));
+      }
 
-      // Creating elements
-      var group = document.createElementNS(settings('xmlns'), 'g'),
-          circle = document.createElementNS(settings('xmlns'), 'circle');
-
-      // Defining properties
-      group.setAttributeNS(null, 'class', settings('classPrefix') + '-hover');
-      group.setAttributeNS(null, 'data-node-id', node.id);
-
+      circle = group.getElementsByClassName(classPrefix +
+        '-hover-node-border')[0];
       // drawing hover circle
-      circle.setAttributeNS(
-        null,
-        'class',
-        settings('classPrefix') + '-hover-area');
-      circle.setAttributeNS(null, 'fill', '#fff');
-      circle.setAttributeNS(null, 'stroke', '#000');
-      circle.setAttributeNS(null, 'stroke-opacity', '0.3');
-      circle.setAttributeNS(null, 'stroke-width', 2);
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
-      circle.setAttributeNS(null, 'pointer-events', 'none');
 
-      group.appendChild(circle);
-
-      if (typeof node.label === 'string' && node.label !== '') {
-        drawHoverBorderAndLabel(
-          fontSize,
-          group,
-          labelWidth,
-          size,
-          node,
-          nodeCircle);
-      } else {
-        group.appendChild(nodeCircle);
+      if (distanceTraveled > e) {
+        circle.setAttributeNS(null, 'display', 'none');
       }
 
-      return group;
+      if (typeof node.label === 'string' && node.label !== '') {
+         // set context font and font size
+        measurementCanvas.font = (fontStyle ? fontStyle + ' ' : '') +
+          fontSize + 'px ' + (settings('hoverFont') || settings('font'));
 
-      function drawHoverBorderAndLabel(
-        fontSize,
-        group,
-        labelWidth,
-        size,
-        node,
-        nodeCircle) {
         var alignment,
             fontColor = (settings('labelHoverColor') === 'node') ?
                           (node.color || settings('defaultNodeColor')) :
                           settings('defaultLabelHoverColor'),
             h = fontSize + 4,
+            labelWidth = measurementCanvas.measureText(node.label).width,
             labelOffsetX = - labelWidth / 2,
             labelOffsetY = fontSize / 3,
-            rectangle = document.createElementNS(settings('xmlns'), 'rect'),
+            rectangle,
             rectOffsetX,
             rectOffsetY,
-            text = document.createElementNS(settings('xmlns'), 'text'),
+            text,
             w = labelWidth + size + 1.5 + fontSize / 3;
+
+        if (!group.getElementsByClassName(classPrefix +
+              '-hover-label-border') ||
+            !group.getElementsByClassName(classPrefix + '-hover-label')) {
+          return;
+        }
+
+        rectangle = group.getElementsByClassName(classPrefix +
+          '-hover-label-border')[0];
+        text = group.getElementsByClassName(classPrefix + '-hover-label')[0];
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
@@ -140,41 +207,22 @@
               Math.round(y - fontSize / 2 - 2));
             break;
         }
-
         // Text
         text.setAttributeNS(null, 'x', Math.round(x + labelOffsetX));
         text.setAttributeNS(null, 'y', Math.round(y + labelOffsetY));
         text.textContent = node.label;
-        text.setAttributeNS(
-          null,
-          'class',
-          settings('classPrefix') + '-hover-label');
-        text.setAttributeNS(null, 'font-size', fontSize);
-        text.setAttributeNS(null, 'font-family', settings('font'));
-        text.setAttributeNS(null, 'fill', fontColor);
-        text.setAttributeNS(null, 'pointer-events', 'none');
 
         // Hover Rectangle
-        rectangle.setAttributeNS(
-          null,
-          'class',
-          settings('classPrefix') + '-hover-area');
-
         if (alignment !== 'center' &&
             (alignment !== 'inside' || labelWidth > e * 2)) {
-          rectangle.setAttributeNS(null, 'fill', '#fff');
-          rectangle.setAttributeNS(null, 'stroke', '#000');
-          rectangle.setAttributeNS(null, 'stroke-opacity', '0.3');
-          rectangle.setAttributeNS(null, 'stroke-width', 2);
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
-          rectangle.setAttributeNS(null, 'pointer-events', 'none');
         }
 
-        // Appending childs
-        group.appendChild(rectangle);
-        group.appendChild(nodeCircle);
-        group.appendChild(text);
+        if (distanceTraveled > e) {
+          text.setAttributeNS(null, 'display', 'none');
+          rectangle.setAttributeNS(null, 'display', 'none');
+        }
       }
     }
   };
