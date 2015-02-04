@@ -103,7 +103,7 @@
      */
     update: function(node, group, measurementCanvas, settings, lastKnownPos) {
       var circle,
-          classPrefix = settings('classPrefix'),
+          classPrefix = '.' + settings('classPrefix'),
           distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
           prefix = settings('prefix') || '',
@@ -115,7 +115,7 @@
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-      if (!group.getElementsByClassName(classPrefix + '-hover-node-border')) {
+      if (!group.querySelector(classPrefix + '-hover-node-border')) {
         return;
       }
 
@@ -127,8 +127,7 @@
           Math.pow(y - lastKnownPos.y, 2));
       }
 
-      circle = group.getElementsByClassName(classPrefix +
-        '-hover-node-border')[0];
+      circle = group.querySelector(classPrefix + '-hover-node-border');
       // drawing hover circle
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
@@ -157,15 +156,13 @@
             text,
             w = labelWidth + size + 1.5 + fontSize / 3;
 
-        if (!group.getElementsByClassName(classPrefix +
-              '-hover-label-border') ||
-            !group.getElementsByClassName(classPrefix + '-hover-label')) {
+        if (!group.querySelector(classPrefix + '-hover-label-border') ||
+            !group.querySelector(classPrefix + '-hover-label')) {
           return;
         }
 
-        rectangle = group.getElementsByClassName(classPrefix +
-          '-hover-label-border')[0];
-        text = group.getElementsByClassName(classPrefix + '-hover-label')[0];
+        rectangle = group.querySelector(classPrefix + '-hover-label-border');
+        text = group.querySelector(classPrefix + '-hover-label');
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
