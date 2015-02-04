@@ -369,6 +369,7 @@
       if (sigma.svg.utils.containsChild(
           self.domElements.groups.hovers,
           self.domElements.hovers[node.id])) {
+        showHoverElements(e);
         return;
       }
 
@@ -432,11 +433,23 @@
 
     function setHoverElementsVisibility(e, visible) {
       var node = e.data.node;
-      updateLastKnownPos(node);
+      var embedSettings = self.settings.embedObjects({
+        prefix: prefix
+      });
 
-      if (!node || !self.domElements.hovers[node.id]) {
+      if (!node || !self.domElements.hovers[node.id] ||
+          !embedSettings('enableHovering')) {
         return;
       }
+
+      // update last known mouse action and hover positions
+      updateLastKnownPos(node);
+      (renderers[node.type] || renderers.def).update(
+        node,
+        self.domElements.hovers[node.id],
+        self.measurementCanvas,
+        embedSettings
+      );
 
       var childNodes = self.domElements.hovers[node.id].childNodes;
       var display = visible ? '' : 'none';
