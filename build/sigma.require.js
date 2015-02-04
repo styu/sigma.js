@@ -8411,16 +8411,17 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             prefix: prefix
           });
 
-      updateLastKnownPos(node);
       if (!embedSettings('enableHovering'))
         return;
 
       if (sigma.svg.utils.containsChild(
           self.domElements.groups.hovers,
           self.domElements.hovers[node.id])) {
+        showHoverElements(e);
         return;
       }
 
+      updateLastKnownPos(node);
       var hoverRenderer = (renderers[node.type] || renderers.def);
       var hover = hoverRenderer.create(
         node,
@@ -8480,15 +8481,28 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     }
 
     function setHoverElementsVisibility(e, visible) {
-      var node = e.data.node;
-      updateLastKnownPos(node);
+      var node = e.data.node,
+          embedSettings = self.settings.embedObjects({
+        prefix: prefix
+      });
 
       if (!node || !self.domElements.hovers[node.id]) {
         return;
       }
 
-      var childNodes = self.domElements.hovers[node.id].childNodes;
-      var display = visible ? '' : 'none';
+      // update last known mouse action and hover positions
+      updateLastKnownPos(node);
+      var hoverRenderer = renderers[node.type] || renderers.def,
+          childNodes = self.domElements.hovers[node.id].childNodes,
+          display = visible ? '' : 'none';
+
+      hoverRenderer.update(
+        node,
+        self.domElements.hovers[node.id],
+        self.measurementCanvas,
+        embedSettings
+      );
+
       for (var i = 0; i < childNodes.length; i++) {
         var childClass = childNodes[i].getAttribute('class');
         if (childClass.indexOf(self.settings('classPrefix') + '-node') < 0) {
@@ -10984,8 +10998,6 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       text.setAttributeNS(null, 'fill', fontColor);
       text.setAttributeNS(null, 'pointer-events', 'none');
 
-      text.textContent = node.label;
-
       return text;
     },
 
@@ -11178,7 +11190,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      */
     update: function(node, group, measurementCanvas, settings, lastKnownPos) {
       var circle,
-          classPrefix = settings('classPrefix'),
+          classPrefix = '.' + settings('classPrefix'),
           distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
           prefix = settings('prefix') || '',
@@ -11190,7 +11202,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-      if (!group.getElementsByClassName(classPrefix + '-hover-node-border')) {
+      if (!group.querySelector(classPrefix + '-hover-node-border')) {
         return;
       }
 
@@ -11202,8 +11214,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           Math.pow(y - lastKnownPos.y, 2));
       }
 
-      circle = group.getElementsByClassName(classPrefix +
-        '-hover-node-border')[0];
+      circle = group.querySelector(classPrefix + '-hover-node-border');
       // drawing hover circle
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
@@ -11232,15 +11243,13 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             text,
             w = labelWidth + size + 1.5 + fontSize / 3;
 
-        if (!group.getElementsByClassName(classPrefix +
-              '-hover-label-border') ||
-            !group.getElementsByClassName(classPrefix + '-hover-label')) {
+        if (!group.querySelector(classPrefix + '-hover-label-border') ||
+            !group.querySelector(classPrefix + '-hover-label')) {
           return;
         }
 
-        rectangle = group.getElementsByClassName(classPrefix +
-          '-hover-label-border')[0];
-        text = group.getElementsByClassName(classPrefix + '-hover-label')[0];
+        rectangle = group.querySelector(classPrefix + '-hover-label-border');
+        text = group.querySelector(classPrefix + '-hover-label');
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
