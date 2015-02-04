@@ -8395,9 +8395,15 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
    */
   // TODO: add option about whether to display hovers or not
   sigma.renderers.svg.prototype.bindHovers = function(prefix) {
-    var renderers = sigma.svg.hovers,
-        self = this,
-        hoveredNode;
+    var hoveredNode,
+        lastKnownPos = {},
+        renderers = sigma.svg.hovers,
+        self = this;
+
+    function updateLastKnownPos(node) {
+      lastKnownPos.x = node[prefix + 'x'];
+      lastKnownPos.y = node[prefix + 'y'];
+    }
 
     function overNode(e) {
       var node = e.data.node,
@@ -8405,12 +8411,26 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             prefix: prefix
           });
 
+      updateLastKnownPos(node);
       if (!embedSettings('enableHovering'))
         return;
 
-      var hover = (renderers[node.type] || renderers.def).create(
+      if (sigma.svg.utils.containsChild(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[node.id])) {
+        return;
+      }
+
+      var hoverRenderer = (renderers[node.type] || renderers.def);
+      var hover = hoverRenderer.create(
         node,
         self.domElements.nodes[node.id],
+        embedSettings
+      );
+
+      hoverRenderer.update(
+        node,
+        hover,
         self.measurementCanvas,
         embedSettings
       );
@@ -8428,15 +8448,22 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             prefix: prefix
           });
 
+      updateLastKnownPos(node);
+
       if (!embedSettings('enableHovering'))
         return;
 
       // Deleting element
-      self.domElements.groups.hovers.removeChild(
-        self.domElements.hovers[node.id]
-      );
+      if (sigma.svg.utils.containsChild(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[node.id])) {
+        self.domElements.groups.hovers.removeChild(
+          self.domElements.hovers[node.id]
+        );
+        delete self.domElements.hovers[node.id];
+      }
+
       hoveredNode = null;
-      delete self.domElements.hovers[node.id];
 
       // Reinstate
       self.domElements.groups.nodes.appendChild(
@@ -8444,37 +8471,71 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       );
     }
 
-    // OPTIMIZE: perform a real update rather than a deletion
-    function update() {
-      if (!hoveredNode)
+    function showHoverElements(e) {
+      setHoverElementsVisibility(e, true);
+    }
+
+    function hideHoverElements(e) {
+      setHoverElementsVisibility(e, false);
+    }
+
+    function setHoverElementsVisibility(e, visible) {
+      var node = e.data.node;
+      updateLastKnownPos(node);
+
+      if (!node || !self.domElements.hovers[node.id]) {
         return;
+      }
 
+      var childNodes = self.domElements.hovers[node.id].childNodes;
+      var display = visible ? '' : 'none';
+      for (var i = 0; i < childNodes.length; i++) {
+        var childClass = childNodes[i].getAttribute('class');
+        if (childClass.indexOf(self.settings('classPrefix') + '-node') < 0) {
+          childNodes[i].setAttributeNS(null, 'display', display);
+        }
+      }
+    }
+
+    function update() {
       var embedSettings = self.settings.embedObjects({
-            prefix: prefix
-          });
+        prefix: prefix
+      });
 
-      // Deleting element before update
-      self.domElements.groups.hovers.removeChild(
-        self.domElements.hovers[hoveredNode.id]
-      );
-      delete self.domElements.hovers[hoveredNode.id];
+      if (!hoveredNode || !embedSettings('enableHovering')) {
+        return;
+      }
 
-      var hover = (renderers[hoveredNode.type] || renderers.def).create(
+      var hoverRenderer = (renderers[hoveredNode.type] || renderers.def);
+      if (!sigma.svg.utils.containsChild(
+          self.domElements.groups.hovers,
+          self.domElements.hovers[hoveredNode.id])) {
+        var hover = hoverRenderer.create(
+          hoveredNode,
+          self.domElements.nodes[hoveredNode.id],
+          embedSettings
+        );
+
+        self.domElements.hovers[hoveredNode.id] = hover;
+
+        // Inserting the hover in the dom
+        self.domElements.groups.hovers.appendChild(hover);
+      }
+
+      hoverRenderer.update(
         hoveredNode,
-        self.domElements.nodes[hoveredNode.id],
+        self.domElements.hovers[hoveredNode.id],
         self.measurementCanvas,
-        embedSettings
+        embedSettings,
+        lastKnownPos
       );
-
-      self.domElements.hovers[hoveredNode.id] = hover;
-
-      // Inserting the hover in the dom
-      self.domElements.groups.hovers.appendChild(hover);
     }
 
     // Binding events
+    this.bind('downNode', hideHoverElements);
     this.bind('overNode', overNode);
     this.bind('outNode', outNode);
+    this.bind('upNode', showHoverElements);
 
     // Update on render
     this.bind('render', update);
@@ -10638,6 +10699,29 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     hide: function(element) {
       element.style.display = 'none';
       return this;
+    },
+    /**
+     * SVG node check for child node.
+     *
+     * @param  {Node}                     parentNode  The parent node.
+     * @param  {Node}                     childNode   The child node.
+     */
+    containsChild: function(parentNode, childNode) {
+      if (!parentNode || !childNode) {
+        return false;
+      }
+
+      // Node.contains is not supported on IE and this is checking for
+      // direct relationship
+      for (var i = 0, childNodes = parentNode.childNodes;
+           i < childNodes.length;
+           i++) {
+        if (childNodes[i] === childNode) {
+          return true;
+        }
+      }
+
+      return false;
     }
   };
 })();
@@ -11013,10 +11097,89 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      * @param  {DOMElement}       nodeCircle         The node DOM Element.
      * @param  {configurable}     settings           The settings function.
      */
-    create: function(node, nodeCircle, measurementCanvas, settings) {
+    create: function(node, nodeCircle, settings) {
+      // Creating elements
+      var circle = document.createElementNS(settings('xmlns'), 'circle'),
+          group = document.createElementNS(settings('xmlns'), 'g'),
+          prefix = settings('prefix') || '';
 
-      // Defining visual properties
-      var labelWidth,
+      // Defining properties
+      group.setAttributeNS(null, 'class', settings('classPrefix') + '-hover');
+      group.setAttributeNS(null, 'data-node-id', node.id);
+
+      // drawing hover circle
+      circle.setAttributeNS(
+        null,
+        'class',
+        settings('classPrefix') + '-hover-node-border');
+      circle.setAttributeNS(null, 'fill', '#fff');
+      circle.setAttributeNS(null, 'stroke', '#000');
+      circle.setAttributeNS(null, 'stroke-opacity', '0.3');
+      circle.setAttributeNS(null, 'stroke-width', 2);
+      circle.setAttributeNS(null, 'pointer-events', 'none');
+
+      group.appendChild(circle);
+
+      if (typeof node.label === 'string' && node.label !== '') {
+        // Text
+        var fontColor = (settings('labelHoverColor') === 'node') ?
+              (node.color || settings('defaultNodeColor')) :
+              settings('defaultLabelHoverColor'),
+            fontSize = (settings('labelSize') === 'fixed') ?
+              settings('defaultLabelSize') :
+              settings('labelSizeRatio') * node[prefix + 'size'],
+            rectangle = document.createElementNS(settings('xmlns'), 'rect'),
+            text = document.createElementNS(settings('xmlns'), 'text');
+
+        text.setAttributeNS(
+          null,
+          'class',
+          settings('classPrefix') + '-hover-label');
+        text.setAttributeNS(null, 'font-size', fontSize);
+        text.setAttributeNS(null, 'font-family', settings('font'));
+        text.setAttributeNS(null, 'fill', fontColor);
+        text.setAttributeNS(null, 'pointer-events', 'none');
+        text.textContent = node.label;
+
+        // Hover Rectangle
+        rectangle.setAttributeNS(
+          null,
+          'class',
+          settings('classPrefix') + '-hover-label-border');
+        rectangle.setAttributeNS(null, 'fill', '#fff');
+        rectangle.setAttributeNS(null, 'stroke', '#000');
+        rectangle.setAttributeNS(null, 'stroke-opacity', '0.3');
+        rectangle.setAttributeNS(null, 'stroke-width', 2);
+        rectangle.setAttributeNS(null, 'pointer-events', 'none');
+
+        // Appending childs
+        group.appendChild(rectangle);
+        group.appendChild(nodeCircle);
+        group.appendChild(text);
+      } else {
+        group.appendChild(nodeCircle);
+      }
+
+      return group;
+    },
+
+    /**
+     * SVG Hover Element Update.
+     *
+     * @param  {object}           node               The node object.
+     * @param  {DOMElement}       group              The parent node containing
+     *                            all hover elements.
+     * @param  {CanvasElement}    measurementCanvas  A fake canvas handled by
+     *                            the svg to perform some measurements and
+     *                            passed by the renderer.
+     * @param  {configurable}     settings           The settings function.
+     * @param  {object}           lastKnownPos       The last known position of
+     *                            the hovered node moved by the mouse
+     */
+    update: function(node, group, measurementCanvas, settings, lastKnownPos) {
+      var circle,
+          classPrefix = settings('classPrefix'),
+          distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
           prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
@@ -11027,69 +11190,57 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-       // set context font and font size
-      measurementCanvas.font = (fontStyle ? fontStyle + ' ' : '') +
-        fontSize + 'px ' + (settings('hoverFont') || settings('font'));
+      if (!group.getElementsByClassName(classPrefix + '-hover-node-border')) {
+        return;
+      }
 
-      labelWidth = measurementCanvas.measureText(node.label).width;
+      // with forced field applied, the node may get moved.
+      // if the hovered node is not within the radius of the last known
+      // position, the hovered area should be hidden
+      if (lastKnownPos && lastKnownPos.x && lastKnownPos.y) {
+        distanceTraveled = Math.sqrt(Math.pow(x - lastKnownPos.x, 2) +
+          Math.pow(y - lastKnownPos.y, 2));
+      }
 
-      // Creating elements
-      var group = document.createElementNS(settings('xmlns'), 'g'),
-          circle = document.createElementNS(settings('xmlns'), 'circle');
-
-      // Defining properties
-      group.setAttributeNS(null, 'class', settings('classPrefix') + '-hover');
-      group.setAttributeNS(null, 'data-node-id', node.id);
-
+      circle = group.getElementsByClassName(classPrefix +
+        '-hover-node-border')[0];
       // drawing hover circle
-      circle.setAttributeNS(
-        null,
-        'class',
-        settings('classPrefix') + '-hover-area');
-      circle.setAttributeNS(null, 'fill', '#fff');
-      circle.setAttributeNS(null, 'stroke', '#000');
-      circle.setAttributeNS(null, 'stroke-opacity', '0.3');
-      circle.setAttributeNS(null, 'stroke-width', 2);
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
-      circle.setAttributeNS(null, 'pointer-events', 'none');
 
-      group.appendChild(circle);
-
-      if (typeof node.label === 'string' && node.label !== '') {
-        drawHoverBorderAndLabel(
-          fontSize,
-          group,
-          labelWidth,
-          size,
-          node,
-          nodeCircle);
-      } else {
-        group.appendChild(nodeCircle);
+      if (distanceTraveled > e) {
+        circle.setAttributeNS(null, 'display', 'none');
       }
 
-      return group;
+      if (typeof node.label === 'string' && node.label !== '') {
+         // set context font and font size
+        measurementCanvas.font = (fontStyle ? fontStyle + ' ' : '') +
+          fontSize + 'px ' + (settings('hoverFont') || settings('font'));
 
-      function drawHoverBorderAndLabel(
-        fontSize,
-        group,
-        labelWidth,
-        size,
-        node,
-        nodeCircle) {
         var alignment,
             fontColor = (settings('labelHoverColor') === 'node') ?
                           (node.color || settings('defaultNodeColor')) :
                           settings('defaultLabelHoverColor'),
             h = fontSize + 4,
+            labelWidth = measurementCanvas.measureText(node.label).width,
             labelOffsetX = - labelWidth / 2,
             labelOffsetY = fontSize / 3,
-            rectangle = document.createElementNS(settings('xmlns'), 'rect'),
+            rectangle,
             rectOffsetX,
             rectOffsetY,
-            text = document.createElementNS(settings('xmlns'), 'text'),
+            text,
             w = labelWidth + size + 1.5 + fontSize / 3;
+
+        if (!group.getElementsByClassName(classPrefix +
+              '-hover-label-border') ||
+            !group.getElementsByClassName(classPrefix + '-hover-label')) {
+          return;
+        }
+
+        rectangle = group.getElementsByClassName(classPrefix +
+          '-hover-label-border')[0];
+        text = group.getElementsByClassName(classPrefix + '-hover-label')[0];
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
@@ -11131,41 +11282,22 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
               Math.round(y - fontSize / 2 - 2));
             break;
         }
-
         // Text
         text.setAttributeNS(null, 'x', Math.round(x + labelOffsetX));
         text.setAttributeNS(null, 'y', Math.round(y + labelOffsetY));
         text.textContent = node.label;
-        text.setAttributeNS(
-          null,
-          'class',
-          settings('classPrefix') + '-hover-label');
-        text.setAttributeNS(null, 'font-size', fontSize);
-        text.setAttributeNS(null, 'font-family', settings('font'));
-        text.setAttributeNS(null, 'fill', fontColor);
-        text.setAttributeNS(null, 'pointer-events', 'none');
 
         // Hover Rectangle
-        rectangle.setAttributeNS(
-          null,
-          'class',
-          settings('classPrefix') + '-hover-area');
-
         if (alignment !== 'center' &&
             (alignment !== 'inside' || labelWidth > e * 2)) {
-          rectangle.setAttributeNS(null, 'fill', '#fff');
-          rectangle.setAttributeNS(null, 'stroke', '#000');
-          rectangle.setAttributeNS(null, 'stroke-opacity', '0.3');
-          rectangle.setAttributeNS(null, 'stroke-width', 2);
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
-          rectangle.setAttributeNS(null, 'pointer-events', 'none');
         }
 
-        // Appending childs
-        group.appendChild(rectangle);
-        group.appendChild(nodeCircle);
-        group.appendChild(text);
+        if (distanceTraveled > e) {
+          text.setAttributeNS(null, 'display', 'none');
+          rectangle.setAttributeNS(null, 'display', 'none');
+        }
       }
     }
   };
@@ -12176,7 +12308,6 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
 
     // DOMElement abstraction
     function Element(domElement) {
-
       // Helpers
       this.attr = function(attrName) {
         return domElement.getAttributeNS(null, attrName);
@@ -12245,23 +12376,20 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       e.stopPropagation();
     }
 
-    // On over
-    function onOver(e) {
-      var target = e.toElement || e.target;
-
+    function handleEvent(type, target) {
       if (!self.settings('eventsEnabled') || !target)
         return;
 
       var el = new Element(target);
 
       if (el.isNode()) {
-        self.dispatchEvent('overNode', {
+        self.dispatchEvent(type + 'Node', {
           node: graph.nodes(el.attr('data-node-id'))
         });
       }
       else if (el.isEdge()) {
         var edge = graph.edges(el.attr('data-edge-id'));
-        self.dispatchEvent('overEdge', {
+        self.dispatchEvent(type + 'Edge', {
           edge: edge,
           source: graph.nodes(edge.source),
           target: graph.nodes(edge.target)
@@ -12269,28 +12397,26 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       }
     }
 
-    // On out
-    function onOut(e) {
-      var target = e.fromElement || e.originalTarget;
+    function onDown(e) {
+      handleEvent('down', e.target);
+    }
 
-      if (!self.settings('eventsEnabled'))
+    // On over
+    function onOver(e) {
+      // firefox fires mouseover events when user clicks the node
+      // and the event has null as its source target
+      if (!e.fromElement && !e.relatedTarget) {
         return;
-
-      var el = new Element(target);
-
-      if (el.isNode()) {
-        self.dispatchEvent('outNode', {
-          node: graph.nodes(el.attr('data-node-id'))
-        });
       }
-      else if (el.isEdge()) {
-        var edge = graph.edges(el.attr('data-edge-id'));
-        self.dispatchEvent('outEdge', {
-          edge: edge,
-          source: graph.nodes(edge.source),
-          target: graph.nodes(edge.target)
-        });
-      }
+      handleEvent('over', e.toElement || e.target);
+    }
+
+    function onOut(e) {
+      handleEvent('out', e.fromElement || e.originalTarget);
+    }
+
+    function onUp(e) {
+      handleEvent('up', e.target);
     }
 
     // Registering Events:
@@ -12303,11 +12429,17 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     container.addEventListener('touchstart', click, false);
     sigma.utils.doubleClick(container, 'touchstart', doubleClick);
 
+    // Mousedown
+    container.addEventListener('mousedown', onDown, true);
+
     // Mouseover
     container.addEventListener('mouseover', onOver, true);
 
     // Mouseout
     container.addEventListener('mouseout', onOut, true);
+
+    // Mouseup
+    container.addEventListener('mouseup', onUp, true);
   };
 }).call(this);
 
