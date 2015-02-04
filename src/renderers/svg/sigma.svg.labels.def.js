@@ -38,8 +38,6 @@
       text.setAttributeNS(null, 'fill', fontColor);
       text.setAttributeNS(null, 'pointer-events', 'none');
 
-      text.textContent = node.label;
-
       return text;
     },
 
