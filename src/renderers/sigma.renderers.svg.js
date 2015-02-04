@@ -362,16 +362,17 @@
             prefix: prefix
           });
 
-      updateLastKnownPos(node);
       if (!embedSettings('enableHovering'))
         return;
 
       if (sigma.svg.utils.containsChild(
           self.domElements.groups.hovers,
           self.domElements.hovers[node.id])) {
+        showHoverElements(e);
         return;
       }
 
+      updateLastKnownPos(node);
       var hoverRenderer = (renderers[node.type] || renderers.def);
       var hover = hoverRenderer.create(
         node,
@@ -431,15 +432,28 @@
     }
 
     function setHoverElementsVisibility(e, visible) {
-      var node = e.data.node;
-      updateLastKnownPos(node);
+      var node = e.data.node,
+          embedSettings = self.settings.embedObjects({
+        prefix: prefix
+      });
 
       if (!node || !self.domElements.hovers[node.id]) {
         return;
       }
 
-      var childNodes = self.domElements.hovers[node.id].childNodes;
-      var display = visible ? '' : 'none';
+      // update last known mouse action and hover positions
+      updateLastKnownPos(node);
+      var hoverRenderer = renderers[node.type] || renderers.def,
+          childNodes = self.domElements.hovers[node.id].childNodes,
+          display = visible ? '' : 'none';
+
+      hoverRenderer.update(
+        node,
+        self.domElements.hovers[node.id],
+        self.measurementCanvas,
+        embedSettings
+      );
+
       for (var i = 0; i < childNodes.length; i++) {
         var childClass = childNodes[i].getAttribute('class');
         if (childClass.indexOf(self.settings('classPrefix') + '-node') < 0) {
