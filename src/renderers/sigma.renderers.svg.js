@@ -327,7 +327,8 @@
     this.domElements.graph = this.container.appendChild(dom);
 
     // Creating groups
-    var groups = ['edges', 'edgeLabels', 'hovers', 'labels', 'nodes'];
+    // hovers are always last
+    var groups = ['edges', 'edgeLabels', 'nodes', 'labels', 'hovers'];
     for (i = 0, l = groups.length; i < l; i++) {
       g = document.createElementNS(this.settings('xmlns'), 'g');
 
