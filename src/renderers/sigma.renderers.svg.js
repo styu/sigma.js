@@ -234,9 +234,10 @@
     // Display edges
     //---------------
     renderers = sigma.svg.edges;
-    subrenderers = sigma.svg.edges.labels;
-    var edgeRenderer;
+    var edgeLabelRenderers = sigma.svg.edges.labels;
     var edgeLabelRenderer;
+    var edgeRenderer;
+    var labelElement;
     //-- First we create the edges which are not already created
     if (drawEdges) {
       for (a = this.edgesOnScreen, i = 0, l = a.length; i < l; i++) {
@@ -244,7 +245,8 @@
         target = nodes(a[i].target);
 
         edgeRenderer = renderers[a[i].type] || renderers.def;
-        edgeLabelRenderer = (subrenderers[a[i].type] || subrenderers.def);
+        edgeLabelRenderer = edgeLabelRenderers[a[i].type] ||
+          edgeLabelRenderers.def;
 
         // update edges
         if (!this.domElements.edges[a[i].id]) {
@@ -270,13 +272,13 @@
         // Update edge labels
         if (!this.domElements.edgeLabels[a[i].id]) {
           //Label
-          e = edgeLabelRenderer.create(
+          labelElement = edgeLabelRenderer.create(
             a[i],
             embedSettings
           );
-          if (e) {
-            this.domElements.edgeLabels[a[i].id] = e;
-            this.domElements.groups.edgeLabels.appendChild(e);
+          if (labelElement) {
+            this.domElements.edgeLabels[a[i].id] = labelElement;
+            this.domElements.groups.edgeLabels.appendChild(labelElement);
           }
         }
 
@@ -325,7 +327,7 @@
     this.domElements.graph = this.container.appendChild(dom);
 
     // Creating groups
-    var groups = ['edges', 'nodes', 'labels', 'hovers', 'edgeLabels'];
+    var groups = ['edges', 'edgeLabels', 'hovers', 'labels', 'nodes'];
     for (i = 0, l = groups.length; i < l; i++) {
       g = document.createElementNS(this.settings('xmlns'), 'g');
 

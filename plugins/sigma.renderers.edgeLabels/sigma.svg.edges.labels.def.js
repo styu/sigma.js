@@ -35,6 +35,8 @@
       text.setAttributeNS(null, 'font-family', settings('font'));
       text.setAttributeNS(null, 'font-family', settings('font'));
       text.setAttributeNS(null, 'fill', fontColor);
+      text.setAttributeNS(null, 'text-anchor', 'middle');
+      text.setAttributeNS(null, 'dominant-baseline', 'text-after-edge');
       text.setAttributeNS(null, 'pointer-events', 'none');
 
       return text;
@@ -42,7 +44,7 @@
 
     /**
      * @param  {object}                   edge         The edge object.
-     * @param  {Element}                  test         The label element.
+     * @param  {Element}                  text         The label element.
      * @param  {object}                   source node  The edge source node.
      * @param  {object}                   target node  The edge target node.
      * @param  {configurable}             settings     The settings function.
@@ -53,8 +55,15 @@
       }
 
       var prefix = settings('prefix') || '',
-          size = edge[prefix + 'size'] || 1,
-          x = (source[prefix + 'x'] + target[prefix + 'x']) / 2,
+        size = edge[prefix + 'size'] || 1;
+      // Case when we don't want to display the label
+      if (!settings('forceLabels') && size < settings('edgeLabelThreshold') ||
+          source === target) {
+        text.style.display = 'none';
+        return;
+      }
+
+      var x = (source[prefix + 'x'] + target[prefix + 'x']) / 2,
           y = (source[prefix + 'y'] + target[prefix + 'y']) / 2,
           dX = target[prefix + 'x'] - source[prefix + 'x'],
           dY = target[prefix + 'y'] - source[prefix + 'y'],
@@ -66,17 +75,9 @@
       // Updating
       text.setAttributeNS(null, 'x', x);
       text.setAttributeNS(null, 'y', y);
-      text.setAttributeNS(null, 'text-anchor', 'middle');
-      text.setAttributeNS(null, 'dominant-baseline', 'text-after-edge');
       text.setAttributeNS(null, 'transform', 'rotate(' + degree + ' ' +
         x + ',' + y + ')');
       text.textContent = edge.label;
-      // Case when we don't want to display the label
-      if (!settings('forceLabels') && size < settings('edgeLabelThreshold') ||
-          source === target) {
-        text.style.display = 'none';
-        return;
-      }
       text.style.display = '';
     }
   };
