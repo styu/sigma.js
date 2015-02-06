@@ -55,7 +55,7 @@
       }
 
       var prefix = settings('prefix') || '',
-        size = edge[prefix + 'size'] || 1;
+          size = edge[prefix + 'size'] || 1;
       // Case when we don't want to display the label
       if (!settings('forceLabels') && size < settings('edgeLabelThreshold') ||
           source === target) {
@@ -78,6 +78,7 @@
       text.setAttributeNS(null, 'transform', 'rotate(' + degree + ' ' +
         x + ',' + y + ')');
       text.textContent = edge.label;
+      // make sure to change display to '' from 'none'
       text.style.display = '';
     }
   };
