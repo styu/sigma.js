@@ -8096,6 +8096,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       nodes: {},
       edges: {},
       labels: {},
+      edgeLabels: {},
       hovers: {}
     };
     this.measurementCanvas = null;
@@ -8282,15 +8283,23 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     // Display edges
     //---------------
     renderers = sigma.svg.edges;
-
+    var edgeLabelRenderers = sigma.svg.edges.labels;
+    var edgeLabelRenderer;
+    var edgeRenderer;
+    var labelElement;
     //-- First we create the edges which are not already created
-    if (drawEdges)
+    if (drawEdges) {
       for (a = this.edgesOnScreen, i = 0, l = a.length; i < l; i++) {
-        if (!this.domElements.edges[a[i].id]) {
-          source = nodes(a[i].source);
-          target = nodes(a[i].target);
+        source = nodes(a[i].source);
+        target = nodes(a[i].target);
 
-          e = (renderers[a[i].type] || renderers.def).create(
+        edgeRenderer = renderers[a[i].type] || renderers.def;
+        edgeLabelRenderer = edgeLabelRenderers[a[i].type] ||
+          edgeLabelRenderers.def;
+
+        // update edges
+        if (!this.domElements.edges[a[i].id]) {
+          e = edgeRenderer.create(
             a[i],
             source,
             target,
@@ -8300,23 +8309,37 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           this.domElements.edges[a[i].id] = e;
           this.domElements.groups.edges.appendChild(e);
         }
-       }
 
-    //-- Second we update the edges
-    if (drawEdges)
-      for (a = this.edgesOnScreen, i = 0, l = a.length; i < l; i++) {
-        source = nodes(a[i].source);
-        target = nodes(a[i].target);
-
-        (renderers[a[i].type] || renderers.def).update(
+        edgeRenderer.update(
           a[i],
           this.domElements.edges[a[i].id],
           source,
           target,
           embedSettings
         );
-       }
 
+        // Update edge labels
+        if (!this.domElements.edgeLabels[a[i].id]) {
+          //Label
+          labelElement = edgeLabelRenderer.create(
+            a[i],
+            embedSettings
+          );
+          if (labelElement) {
+            this.domElements.edgeLabels[a[i].id] = labelElement;
+            this.domElements.groups.edgeLabels.appendChild(labelElement);
+          }
+        }
+
+        edgeLabelRenderer.update(
+          a[i],
+          this.domElements.edgeLabels[a[i].id],
+          source,
+          target,
+          embedSettings
+        );
+      }
+    }
     this.dispatchEvent('render');
 
     return this;
@@ -8353,7 +8376,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     this.domElements.graph = this.container.appendChild(dom);
 
     // Creating groups
-    var groups = ['edges', 'nodes', 'labels', 'hovers'];
+    // hovers are always last
+    var groups = ['edges', 'edgeLabels', 'nodes', 'labels', 'hovers'];
     for (i = 0, l = groups.length; i < l; i++) {
       g = document.createElementNS(this.settings('xmlns'), 'g');
 
@@ -8603,6 +8627,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
    */
   sigma.utils.pkg('sigma.svg.nodes');
   sigma.utils.pkg('sigma.svg.edges');
+  sigma.utils.pkg('sigma.svg.edges.labels');
   sigma.utils.pkg('sigma.svg.labels');
 }).call(this);
 
