@@ -156,6 +156,7 @@
     // TODO: find a more sensible way to perform this operation
     this.hideDOMElements(this.domElements.nodes);
     this.hideDOMElements(this.domElements.edges);
+    this.hideDOMElements(this.domElements.edgeLabels);
     this.hideDOMElements(this.domElements.labels);
 
     // Find which nodes are on screen
