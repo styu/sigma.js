@@ -58,7 +58,7 @@
           size = edge[prefix + 'size'] || 1;
       // Case when we don't want to display the label
       if (!settings('forceLabels') && size < settings('edgeLabelThreshold') ||
-          source === target || edge.hidden) {
+          source === target) {
         text.style.display = 'none';
         return;
       }
