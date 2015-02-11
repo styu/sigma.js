@@ -63,11 +63,12 @@
     }
   }
 
-  var drawSVGImage = function (node, group, settings) {
-    if(sigInst && node.image && node.image.url) {
+  var updateSVGImage = function (node, group, settings) {
+    if(node.image && node.image.url && group.childNodes.length === 1) {
       var clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
         clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
-        clipPathId = settings('classPrefix') + '-clip-path-' + node.id,
+        clipPathId = settings('classPrefix') + '-clip-path-' +
+          Math.random().toString(36).substring(2, 15),
         def = document.createElementNS(settings('xmlns'), 'defs'),
         image = document.createElementNS(settings('xmlns'), 'image'),
         url = node.image.url;
@@ -93,6 +94,18 @@
         node.image.url);
       group.appendChild(def);
       group.appendChild(image);
+    } else if ((!node.image || !node.image.url) && group.childNodes.length >= 1) {
+      var childNodes = group.childNodes,
+          className,
+          i = 0;
+      while(i < childNodes.length) {
+        className = childNodes[i].getAttribute('class');
+        if (className !== (settings('classPrefix') + '-node')) {
+          group.removeChild(childNodes[i]);
+          continue;
+        }
+        i++;
+      }
     }
   }
 
@@ -137,10 +150,10 @@
           node.color || settings('defaultNodeColor'));
 
         group.appendChild(circle);
-        drawSVGImage(node, group, settings);
         return group;
       },
       update: function(node, group, settings) {
+        updateSVGImage(node, group, settings);
         var classPrefix = settings('classPrefix'),
           clip = node.image.clip || 1,
           // 1 is arbitrary, anyway only the ratio counts
@@ -187,8 +200,8 @@
               // no class name, must be the clip-path
               var clipPath = childNodes[i].firstChild;
               if (clipPath != null) {
-                var clipPathId = classPrefix + '-clip-path-' + node.id;
-                if (clipPath.getAttribute('id') === clipPathId) {
+                var clipPathId = clipPath.getAttribute('id');
+                if (clipPathId.indexOf(classPrefix + '-clip-path-') >=0) {
                   clipPath.firstChild.setAttributeNS(null, 'cx', x);
                   clipPath.firstChild.setAttributeNS(null, 'cy', y);
                   clipPath.firstChild.setAttributeNS(null, 'r',
