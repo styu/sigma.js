@@ -214,7 +214,6 @@
       });
       
       _drag = false;
-      _node = null;
     };
 
     function nodeMouseMove(event) {
