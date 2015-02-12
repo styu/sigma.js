@@ -67,8 +67,7 @@
     if(node.image && node.image.url && group.childNodes.length === 1) {
       var clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
         clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
-        clipPathId = settings('classPrefix') + '-clip-path-' +
-          Math.random().toString(36).substring(2, 15),
+        clipPathId = settings('classPrefix') + '-clip-path-' + node.id,
         def = document.createElementNS(settings('xmlns'), 'defs'),
         image = document.createElementNS(settings('xmlns'), 'image'),
         url = node.image.url;
@@ -202,8 +201,8 @@
               // no class name, must be the clip-path
               var clipPath = childNodes[i].firstChild;
               if (clipPath != null) {
-                var clipPathId = clipPath.getAttribute('id');
-                if (clipPathId.indexOf(classPrefix + '-clip-path-') >=0) {
+                var clipPathId = classPrefix + '-clip-path-' + node.id;
+                if (clipPath.getAttribute('id') === clipPathId) {
                   clipPath.firstChild.setAttributeNS(null, 'cx', x);
                   clipPath.firstChild.setAttributeNS(null, 'cy', y);
                   clipPath.firstChild.setAttributeNS(null, 'r',
