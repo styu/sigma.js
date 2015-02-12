@@ -195,6 +195,8 @@
                 r*xratio*2*Math.sin(-3.142/4)*(-1));
               childNodes[i].setAttributeNS(null, 'height',
                 r*yratio*2*Math.cos(-3.142/4));
+              childNodes[i].setAttributeNS('http://www.w3.org/1999/xlink', 'href',
+                node.image.url);
               break;
             default:
               // no class name, must be the clip-path
