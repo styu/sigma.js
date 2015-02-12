@@ -93,17 +93,18 @@
         node.image.url);
       group.appendChild(def);
       group.appendChild(image);
-    } else if ((!node.image || !node.image.url) && group.childNodes.length >= 1) {
+    } else if (!node.image || !node.image.url) {
       var childNodes = group.childNodes,
           className,
           i = 0;
       while(i < childNodes.length) {
         className = childNodes[i].getAttribute('class');
-        if (className !== (settings('classPrefix') + '-node')) {
+        // keep node element and remove everything else
+        if (className === (settings('classPrefix') + '-node')) {
+          i++;
+        } else {
           group.removeChild(childNodes[i]);
-          continue;
         }
-        i++;
       }
     }
   }
@@ -194,6 +195,8 @@
                 r*xratio*2*Math.sin(-3.142/4)*(-1));
               childNodes[i].setAttributeNS(null, 'height',
                 r*yratio*2*Math.cos(-3.142/4));
+              // image.url update doesn't make sigma recreate the image
+              // so href needs to be updated here
               childNodes[i].setAttributeNS('http://www.w3.org/1999/xlink', 'href',
                 node.image.url);
               break;
