@@ -29,6 +29,8 @@
     // {string}
     classPrefix: 'sigma',
     // {string}
+    idPrefix: 'sigma',
+    // {string}
     defaultNodeType: 'def',
     // {string}
     defaultEdgeType: 'def',
