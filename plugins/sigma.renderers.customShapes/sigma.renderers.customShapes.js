@@ -64,6 +64,7 @@
   }
 
   var updateSVGImage = function (node, group, settings) {
+    var classPrefix = settings('classPrefix');
     if(node.image && node.image.url && group.childNodes.length === 1) {
       var clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
         clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
@@ -85,8 +86,8 @@
         "" : document.location.href;
       // To fix cases where an anchor tag was used
       absolutePath = absolutePath.split("#")[0];
-      image.setAttributeNS(null, 'class',
-        settings('classPrefix') + '-node-image' + cssClass);
+      image.setAttributeNS(null, 'class', classPrefix + '-node-image' +
+        cssClass);
       image.setAttributeNS(null, 'clip-path',
         'url(' + absolutePath + '#' + clipPathId + ')');
       image.setAttributeNS(null, 'pointer-events', 'none');
@@ -101,10 +102,11 @@
       while(i < childNodes.length) {
         className = childNodes[i].getAttribute('class');
         // keep node element and remove everything else
-        if (className === (settings('classPrefix') + '-node')) {
-          i++;
-        } else {
+        if (!className || className.indexOf(classPrefix + '-node-') > -1 ||
+            className.indexOf(classPrefix + '-node') < 0) {
           group.removeChild(childNodes[i]);
+        } else {
+          i++;
         }
       }
     }
@@ -156,6 +158,7 @@
       update: function(node, group, settings) {
         updateSVGImage(node, group, settings);
         var classPrefix = settings('classPrefix'),
+          cssClass = node.cssClass ? ' ' + node.cssClass : '',
           clip = node.image.clip || 1,
           // 1 is arbitrary, anyway only the ratio counts
           ih = node.image.h || 1,
@@ -172,22 +175,8 @@
 
         for(var i = 0, childNodes = group.childNodes; i < childNodes.length; i ++) {
           var className = childNodes[i].getAttribute('class');
-
-          switch (className) {
-            case classPrefix + '-node':
-              childNodes[i].setAttributeNS(null, 'cx', x);
-              childNodes[i].setAttributeNS(null, 'cy', y);
-              childNodes[i].setAttributeNS(null, 'r', size);
-
-              // // Updating only if not freestyle
-              if (!settings('freeStyle')) {
-                childNodes[i].setAttributeNS(
-                  null,
-                  'fill',
-                  node.color || settings('defaultNodeColor'));
-              }
-              break;
-            case classPrefix + '-node-image':
+          if (className) {
+            if (className.indexOf(classPrefix + '-node-') > -1) {
               childNodes[i].setAttributeNS(null, 'x',
                 x+Math.sin(-3.142/4)*r*xratio);
               childNodes[i].setAttributeNS(null, 'y',
@@ -196,24 +185,38 @@
                 r*xratio*2*Math.sin(-3.142/4)*(-1));
               childNodes[i].setAttributeNS(null, 'height',
                 r*yratio*2*Math.cos(-3.142/4));
+              childNodes[i].setAttributeNS(null, 'class', classPrefix +
+                '-node-image' + cssClass);
               // image.url update doesn't make sigma recreate the image
               // so href needs to be updated here
               childNodes[i].setAttributeNS('http://www.w3.org/1999/xlink', 'href',
                 node.image.url);
-              break;
-            default:
-              // no class name, must be the clip-path
-              var clipPath = childNodes[i].firstChild;
-              if (clipPath != null) {
-                var clipPathId = settings('clipPathPrefix') + '-clip-path-' + node.id;
-                if (clipPath.getAttribute('id') === clipPathId) {
-                  clipPath.firstChild.setAttributeNS(null, 'cx', x);
-                  clipPath.firstChild.setAttributeNS(null, 'cy', y);
-                  clipPath.firstChild.setAttributeNS(null, 'r',
-                    clip * size);
-                }
+            } else if (className.indexOf(classPrefix + '-node') > -1) {
+              childNodes[i].setAttributeNS(null, 'cx', x);
+              childNodes[i].setAttributeNS(null, 'cy', y);
+              childNodes[i].setAttributeNS(null, 'r', size);
+              childNodes[i].setAttributeNS(null, 'class', classPrefix + '-node' +
+                cssClass);
+              // // Updating only if not freestyle
+              if (!settings('freeStyle')) {
+                childNodes[i].setAttributeNS(
+                  null,
+                  'fill',
+                  node.color || settings('defaultNodeColor'));
               }
-              break;
+            }
+          } else {
+            // no class name found, must be the clip-path
+            var clipPath = childNodes[i].firstChild;
+            if (clipPath != null) {
+              var clipPathId = settings('clipPathPrefix') + '-clip-path-' + node.id;
+              if (clipPath.getAttribute('id') === clipPathId) {
+                clipPath.firstChild.setAttributeNS(null, 'cx', x);
+                clipPath.firstChild.setAttributeNS(null, 'cy', y);
+                clipPath.firstChild.setAttributeNS(null, 'r',
+                  clip * size);
+              }
+            }
           }
         }
 
