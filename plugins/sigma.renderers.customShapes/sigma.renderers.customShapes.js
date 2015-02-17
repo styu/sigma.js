@@ -68,6 +68,7 @@
       var clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
         clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
         clipPathId = settings('clipPathPrefix') + '-clip-path-' + node.id,
+        cssClass = node.cssClass ? ' ' + node.cssClass : '',
         def = document.createElementNS(settings('xmlns'), 'defs'),
         image = document.createElementNS(settings('xmlns'), 'image'),
         url = node.image.url;
@@ -85,7 +86,7 @@
       // To fix cases where an anchor tag was used
       absolutePath = absolutePath.split("#")[0];
       image.setAttributeNS(null, 'class',
-        settings('classPrefix') + '-node-image');
+        settings('classPrefix') + '-node-image' + cssClass);
       image.setAttributeNS(null, 'clip-path',
         'url(' + absolutePath + '#' + clipPathId + ')');
       image.setAttributeNS(null, 'pointer-events', 'none');

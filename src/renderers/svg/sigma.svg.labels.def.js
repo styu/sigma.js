@@ -52,7 +52,8 @@
      * @param  {configurable}       settings            The settings function.
      */
     update: function(node, text, measurementCanvas, settings) {
-      var prefix = settings('prefix') || '',
+      var cssClass = node.cssClass ? ' ' + node.cssClass : '',
+          prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
           alignment,
           labelWidth,
@@ -115,6 +116,8 @@
         Math.round(node[prefix + 'x'] + labelOffsetX));
       text.setAttributeNS(null, 'y',
         Math.round(node[prefix + 'y'] + labelOffsetY));
+      text.setAttributeNS(null, 'class', settings('classPrefix') + '-label' +
+        cssClass);
       text.textContent = node.label;
 
       // Showing
