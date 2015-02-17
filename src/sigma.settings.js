@@ -29,7 +29,7 @@
     // {string}
     classPrefix: 'sigma',
     // {string}
-    idPrefix: 'sigma',
+    clipPathPrefix: 'sigma',
     // {string}
     defaultNodeType: 'def',
     // {string}
