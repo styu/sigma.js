@@ -2923,6 +2923,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     // {string}
     classPrefix: 'sigma',
     // {string}
+    clipPathPrefix: 'sigma',
+    // {string}
     defaultNodeType: 'def',
     // {string}
     defaultEdgeType: 'def',
