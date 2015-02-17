@@ -56,13 +56,16 @@
      * @param  {configurable}             settings   The settings function.
      */
     update: function(edge, line, source, target, settings) {
-      var prefix = settings('prefix') || '';
+      var cssClass = edge.cssClass ? ' ' + edge.cssClass : '',
+          prefix = settings('prefix') || '';
 
       line.setAttributeNS(null, 'stroke-width', edge[prefix + 'size'] || 1);
       line.setAttributeNS(null, 'x1', source[prefix + 'x']);
       line.setAttributeNS(null, 'y1', source[prefix + 'y']);
       line.setAttributeNS(null, 'x2', target[prefix + 'x']);
       line.setAttributeNS(null, 'y2', target[prefix + 'y']);
+      line.setAttributeNS(null, 'class', settings('classPrefix') + '-edge' +
+        cssClass);
 
       // Showing
       line.style.display = '';
