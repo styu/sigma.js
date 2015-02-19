@@ -102,10 +102,16 @@
      *                            the hovered node moved by the mouse
      */
     update: function(node, group, measurementCanvas, settings, lastKnownPos) {
-      var circle,
-          classPrefix = '.' + settings('classPrefix'),
+      var classPrefix = settings('classPrefix'),
+          circle = group.querySelector('.' + classPrefix +
+            '-hover-node-border'),
+          additionalClass = node.cssClass ? ' ' + node.cssClass : '',
           distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
+          text = group.querySelector('.' + classPrefix +
+            '-hover-label'),
+          rectangle = group.querySelector('.' + classPrefix +
+            '-hover-label-border'),
           prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
           fontSize = (settings('labelSize') === 'fixed') ?
@@ -115,7 +121,7 @@
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-      if (!group.querySelector(classPrefix + '-hover-node-border')) {
+      if (!circle) {
         return;
       }
 
@@ -127,11 +133,12 @@
           Math.pow(y - lastKnownPos.y, 2));
       }
 
-      circle = group.querySelector(classPrefix + '-hover-node-border');
       // drawing hover circle
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
+      circle.setAttributeNS(null, 'class', classPrefix + '-hover-node-border' +
+        additionalClass);
 
       if (distanceTraveled > e) {
         circle.setAttributeNS(null, 'display', 'none');
@@ -150,19 +157,13 @@
             labelWidth = measurementCanvas.measureText(node.label).width,
             labelOffsetX = - labelWidth / 2,
             labelOffsetY = fontSize / 3,
-            rectangle,
             rectOffsetX,
             rectOffsetY,
-            text,
             w = labelWidth + size + 1.5 + fontSize / 3;
 
-        if (!group.querySelector(classPrefix + '-hover-label-border') ||
-            !group.querySelector(classPrefix + '-hover-label')) {
+        if (!rectangle || !text) {
           return;
         }
-
-        rectangle = group.querySelector(classPrefix + '-hover-label-border');
-        text = group.querySelector(classPrefix + '-hover-label');
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
@@ -207,6 +208,8 @@
         // Text
         text.setAttributeNS(null, 'x', Math.round(x + labelOffsetX));
         text.setAttributeNS(null, 'y', Math.round(y + labelOffsetY));
+        text.setAttributeNS(null, 'class', classPrefix + '-hover-label' +
+          additionalClass);
         text.textContent = node.label;
 
         // Hover Rectangle
@@ -214,6 +217,8 @@
             (alignment !== 'inside' || labelWidth > e * 2)) {
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
+          rectangle.setAttributeNS(null, 'class', classPrefix +
+            '-hover-label-border' + additionalClass);
         }
 
         if (distanceTraveled > e) {

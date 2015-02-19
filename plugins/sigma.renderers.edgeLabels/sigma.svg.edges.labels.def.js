@@ -63,7 +63,8 @@
         return;
       }
 
-      var x = (source[prefix + 'x'] + target[prefix + 'x']) / 2,
+      var additionalClass = edge.cssClass ? ' ' + edge.cssClass : '',
+          x = (source[prefix + 'x'] + target[prefix + 'x']) / 2,
           y = (source[prefix + 'y'] + target[prefix + 'y']) / 2,
           dX = target[prefix + 'x'] - source[prefix + 'x'],
           dY = target[prefix + 'y'] - source[prefix + 'y'],
@@ -77,6 +78,8 @@
       text.setAttributeNS(null, 'y', y);
       text.setAttributeNS(null, 'transform', 'rotate(' + degree + ' ' +
         x + ',' + y + ')');
+      text.setAttributeNS(null, 'class',
+        settings('classPrefix') + '-edge-label' + additionalClass);
       text.textContent = edge.label;
       // make sure to change display to '' from 'none'
       text.style.display = '';
