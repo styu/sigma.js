@@ -66,13 +66,13 @@
   var updateSVGImage = function (node, group, settings) {
     var classPrefix = settings('classPrefix');
     if(node.image && node.image.url && group.childNodes.length === 1) {
-      var clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
-        clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
-        clipPathId = settings('clipPathPrefix') + '-clip-path-' + node.id,
-        cssClass = node.cssClass ? ' ' + node.cssClass : '',
-        def = document.createElementNS(settings('xmlns'), 'defs'),
-        image = document.createElementNS(settings('xmlns'), 'image'),
-        url = node.image.url;
+      var additionalClass = node.cssClass ? ' ' + node.cssClass : '',
+          clipCircle = document.createElementNS(settings('xmlns'), 'circle'),
+          clipPath = document.createElementNS(settings('xmlns'), 'clipPath'),
+          clipPathId = settings('clipPathPrefix') + '-clip-path-' + node.id,
+          def = document.createElementNS(settings('xmlns'), 'defs'),
+          image = document.createElementNS(settings('xmlns'), 'image'),
+          url = node.image.url;
 
       clipPath.setAttributeNS(null, 'id', clipPathId);
       clipPath.appendChild(clipCircle);
@@ -87,7 +87,7 @@
       // To fix cases where an anchor tag was used
       absolutePath = absolutePath.split("#")[0];
       image.setAttributeNS(null, 'class', classPrefix + '-node-image' +
-        cssClass);
+        additionalClass);
       image.setAttributeNS(null, 'clip-path',
         'url(' + absolutePath + '#' + clipPathId + ')');
       image.setAttributeNS(null, 'pointer-events', 'none');
@@ -157,8 +157,8 @@
       },
       update: function(node, group, settings) {
         updateSVGImage(node, group, settings);
-        var classPrefix = settings('classPrefix'),
-          cssClass = node.cssClass ? ' ' + node.cssClass : '',
+        var additionalClass = node.cssClass ? ' ' + node.cssClass : '',
+        	classPrefix = settings('classPrefix'),
           clip = node.image.clip || 1,
           // 1 is arbitrary, anyway only the ratio counts
           ih = node.image.h || 1,
@@ -186,7 +186,7 @@
               childNodes[i].setAttributeNS(null, 'height',
                 r*yratio*2*Math.cos(-3.142/4));
               childNodes[i].setAttributeNS(null, 'class', classPrefix +
-                '-node-image' + cssClass);
+                '-node-image' + additionalClass);
               // image.url update doesn't make sigma recreate the image
               // so href needs to be updated here
               childNodes[i].setAttributeNS('http://www.w3.org/1999/xlink', 'href',
@@ -196,7 +196,7 @@
               childNodes[i].setAttributeNS(null, 'cy', y);
               childNodes[i].setAttributeNS(null, 'r', size);
               childNodes[i].setAttributeNS(null, 'class', classPrefix + '-node' +
-                cssClass);
+                additionalClass);
               // // Updating only if not freestyle
               if (!settings('freeStyle')) {
                 childNodes[i].setAttributeNS(

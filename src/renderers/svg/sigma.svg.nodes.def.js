@@ -36,7 +36,7 @@
      * @param  {configurable}             settings The settings function.
      */
     update: function(node, circle, settings) {
-      var cssClass = node.cssClass ? ' ' + node.cssClass : '',
+      var additionalClass = node.cssClass ? ' ' + node.cssClass : '',
           prefix = settings('prefix') || '';
 
       // Applying changes
@@ -45,7 +45,7 @@
       circle.setAttributeNS(null, 'cy', node[prefix + 'y']);
       circle.setAttributeNS(null, 'r', node[prefix + 'size']);
       circle.setAttributeNS(null, 'class', settings('classPrefix') + '-node' +
-        cssClass);
+        additionalClass);
 
       // Updating only if not freestyle
       if (!settings('freeStyle'))
