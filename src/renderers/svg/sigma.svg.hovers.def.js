@@ -105,7 +105,7 @@
       var classPrefix = settings('classPrefix'),
           circle = group.querySelector('.' + classPrefix +
             '-hover-node-border'),
-          cssClass = node.cssClass ? ' ' + node.cssClass : '',
+          additionalClass = node.cssClass ? ' ' + node.cssClass : '',
           distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
           text = group.querySelector('.' + classPrefix +
@@ -138,7 +138,7 @@
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
       circle.setAttributeNS(null, 'class', classPrefix + '-hover-node-border' +
-        cssClass);
+        additionalClass);
 
       if (distanceTraveled > e) {
         circle.setAttributeNS(null, 'display', 'none');
@@ -209,7 +209,7 @@
         text.setAttributeNS(null, 'x', Math.round(x + labelOffsetX));
         text.setAttributeNS(null, 'y', Math.round(y + labelOffsetY));
         text.setAttributeNS(null, 'class', classPrefix + '-hover-label' +
-          cssClass);
+          additionalClass);
         text.textContent = node.label;
 
         // Hover Rectangle
@@ -218,7 +218,7 @@
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
           rectangle.setAttributeNS(null, 'class', classPrefix +
-            '-hover-label-border' + cssClass);
+            '-hover-label-border' + additionalClass);
         }
 
         if (distanceTraveled > e) {
