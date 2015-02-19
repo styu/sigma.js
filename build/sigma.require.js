@@ -10807,13 +10807,16 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      * @param  {configurable}             settings The settings function.
      */
     update: function(node, circle, settings) {
-      var prefix = settings('prefix') || '';
+      var additionalClass = node.cssClass ? ' ' + node.cssClass : '',
+          prefix = settings('prefix') || '';
 
       // Applying changes
       // TODO: optimize - check if necessary
       circle.setAttributeNS(null, 'cx', node[prefix + 'x']);
       circle.setAttributeNS(null, 'cy', node[prefix + 'y']);
       circle.setAttributeNS(null, 'r', node[prefix + 'size']);
+      circle.setAttributeNS(null, 'class', settings('classPrefix') + '-node' +
+        additionalClass);
 
       // Updating only if not freestyle
       if (!settings('freeStyle'))
@@ -10886,13 +10889,16 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      * @param  {configurable}             settings   The settings function.
      */
     update: function(edge, line, source, target, settings) {
-      var prefix = settings('prefix') || '';
+      var additionalClass = edge.cssClass ? ' ' + edge.cssClass : '',
+          prefix = settings('prefix') || '';
 
       line.setAttributeNS(null, 'stroke-width', edge[prefix + 'size'] || 1);
       line.setAttributeNS(null, 'x1', source[prefix + 'x']);
       line.setAttributeNS(null, 'y1', source[prefix + 'y']);
       line.setAttributeNS(null, 'x2', target[prefix + 'x']);
       line.setAttributeNS(null, 'y2', target[prefix + 'y']);
+      line.setAttributeNS(null, 'class', settings('classPrefix') + '-edge' +
+        additionalClass);
 
       // Showing
       line.style.display = '';
@@ -11041,7 +11047,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      * @param  {configurable}       settings            The settings function.
      */
     update: function(node, text, measurementCanvas, settings) {
-      var prefix = settings('prefix') || '',
+      var additionalClass = node.cssClass ? ' ' + node.cssClass : '',
+          prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
           alignment,
           labelWidth,
@@ -11104,6 +11111,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
         Math.round(node[prefix + 'x'] + labelOffsetX));
       text.setAttributeNS(null, 'y',
         Math.round(node[prefix + 'y'] + labelOffsetY));
+      text.setAttributeNS(null, 'class', settings('classPrefix') + '-label' +
+        additionalClass);
       text.textContent = node.label;
 
       // Showing
@@ -11218,10 +11227,16 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      *                            the hovered node moved by the mouse
      */
     update: function(node, group, measurementCanvas, settings, lastKnownPos) {
-      var circle,
-          classPrefix = '.' + settings('classPrefix'),
+      var classPrefix = settings('classPrefix'),
+          circle = group.querySelector('.' + classPrefix +
+            '-hover-node-border'),
+          additionalClass = node.cssClass ? ' ' + node.cssClass : '',
           distanceTraveled = 0,
           fontStyle = settings('hoverFontStyle') || settings('fontStyle'),
+          text = group.querySelector('.' + classPrefix +
+            '-hover-label'),
+          rectangle = group.querySelector('.' + classPrefix +
+            '-hover-label-border'),
           prefix = settings('prefix') || '',
           size = node[prefix + 'size'],
           fontSize = (settings('labelSize') === 'fixed') ?
@@ -11231,7 +11246,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           x = node[prefix + 'x'],
           y = node[prefix + 'y'];
 
-      if (!group.querySelector(classPrefix + '-hover-node-border')) {
+      if (!circle) {
         return;
       }
 
@@ -11243,11 +11258,12 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
           Math.pow(y - lastKnownPos.y, 2));
       }
 
-      circle = group.querySelector(classPrefix + '-hover-node-border');
       // drawing hover circle
       circle.setAttributeNS(null, 'cx', Math.round(x));
       circle.setAttributeNS(null, 'cy', Math.round(y));
       circle.setAttributeNS(null, 'r', Math.round(e));
+      circle.setAttributeNS(null, 'class', classPrefix + '-hover-node-border' +
+        additionalClass);
 
       if (distanceTraveled > e) {
         circle.setAttributeNS(null, 'display', 'none');
@@ -11266,19 +11282,13 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             labelWidth = measurementCanvas.measureText(node.label).width,
             labelOffsetX = - labelWidth / 2,
             labelOffsetY = fontSize / 3,
-            rectangle,
             rectOffsetX,
             rectOffsetY,
-            text,
             w = labelWidth + size + 1.5 + fontSize / 3;
 
-        if (!group.querySelector(classPrefix + '-hover-label-border') ||
-            !group.querySelector(classPrefix + '-hover-label')) {
+        if (!rectangle || !text) {
           return;
         }
-
-        rectangle = group.querySelector(classPrefix + '-hover-label-border');
-        text = group.querySelector(classPrefix + '-hover-label');
 
         if (settings('labelAlignment') === undefined) {
           alignment = settings('defaultLabelAlignment');
@@ -11323,6 +11333,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
         // Text
         text.setAttributeNS(null, 'x', Math.round(x + labelOffsetX));
         text.setAttributeNS(null, 'y', Math.round(y + labelOffsetY));
+        text.setAttributeNS(null, 'class', classPrefix + '-hover-label' +
+          additionalClass);
         text.textContent = node.label;
 
         // Hover Rectangle
@@ -11330,6 +11342,8 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
             (alignment !== 'inside' || labelWidth > e * 2)) {
           rectangle.setAttributeNS(null, 'width', w);
           rectangle.setAttributeNS(null, 'height', h);
+          rectangle.setAttributeNS(null, 'class', classPrefix +
+            '-hover-label-border' + additionalClass);
         }
 
         if (distanceTraveled > e) {
