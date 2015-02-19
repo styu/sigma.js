@@ -177,8 +177,6 @@
           captor: event,
           renderer: _renderer
         });
-
-        event.preventDefault();
       }
     };
 

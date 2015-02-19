@@ -260,6 +260,7 @@
               shiftKey: e.shiftKey
             });
         }
+        e.preventDefault();
       }
     }
 
