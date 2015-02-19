@@ -6339,6 +6339,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
               shiftKey: e.shiftKey
             });
         }
+        e.preventDefault();
       }
     }
 
