@@ -119,7 +119,7 @@
     //           several frames.
     canvasEdgesBatchSize: 500,
     webglEdgesBatchSize: 1000,
-
+    directedGraphArrowRatio: 4,
 
 
 
