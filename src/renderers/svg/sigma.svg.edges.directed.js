@@ -22,8 +22,6 @@
           color = edge.color,
           defaultEdgeColor = settings('defaultEdgeColor'),
           defaultNodeColor = settings('defaultNodeColor'),
-          lineName = "line",
-          polyName = "polygon",
           prefix = settings('prefix') || '';
 
       if (!color)
@@ -40,8 +38,8 @@
         }
     
       var parent = document.createElementNS(settings("xmlns"), "g"),
-          line = document.createElementNS(settings("xmlns"), lineName),
-          poly = document.createElementNS(settings("xmlns"), polyName);
+          line = document.createElementNS(settings("xmlns"), "line"),
+          poly = document.createElementNS(settings("xmlns"), "polygon");
 
       parent.appendChild(line);
       parent.appendChild(poly);
@@ -73,9 +71,7 @@
       if(source == target) return this;
 
       var prefix = settings("prefix") || "",
-          polyName = "polygon",
-          lineName = "line",
-          line = obj.getElementsByTagName(lineName)[0];
+          line = obj.getElementsByTagName("line")[0];
 
       var sourceX = source[prefix + "x"];
       var sourceY = source[prefix + "y"];
@@ -93,7 +89,7 @@
 
       obj.style.display = "";
 
-      var poly = obj.getElementsByTagName(polyName)[0];
+      var poly = obj.getElementsByTagName("polygon")[0];
 
       // Get the width and height of the line.
       var lineWidth = sourceX - targetX;
@@ -101,12 +97,12 @@
       // Calculate the length of the line.
       var lineLength = Math.sqrt(Math.pow(lineWidth, 2) + Math.pow(lineHeight, 2));
       // Work out cos and sin of the triangle.
-      var cosAng = (lineLength == 0) ? 0 : (lineWidth / lineLength);
-      var sinAng = (lineLength == 0) ? 0 : (lineHeight / lineLength);
+      var cosAng = (lineLength === 0) ? 0 : (lineWidth / lineLength);
+      var sinAng = (lineLength === 0) ? 0 : (lineHeight / lineLength);
       // Calculate the distance from the center of the node rectangle to the points
       // at which the line exits the rectangle.
-      var distToEndWidth = (cosAng == 0) ? 0 : (targetSize / cosAng);
-      var distToEndHeight = (sinAng == 0) ? 0 : (targetSize / sinAng);
+      var distToEndWidth = (cosAng === 0) ? 0 : (targetSize / cosAng);
+      var distToEndHeight = (sinAng === 0) ? 0 : (targetSize / sinAng);
 
       var arrowTriangleRatio = targetSize / (settings("directedGraphArrowRatio") || 4);
       var arrowTriangleWidth =  arrowTriangleRatio *
