@@ -46,17 +46,17 @@
       var prefix = settings("prefix") || "";
       var text = obj.getElementsByTagName("rect")[0];
       var rect = obj.getElementsByTagName("text")[0];
-      var sizeMax = 16;
-      var sizeRange = 8;
-      var size = (node[prefix + "size"] - sizeMax + sizeRange) * sizeMax / sizeRange;
-      var padding = size * 1.5;
+      var sizeMax = settings("textNodeMaxSize") || 16;
+      var sizeRange = settings("textNodeRangeSize") || 8;
+      var size = Math.max((node[prefix + "size"] - sizeMax + sizeRange) * sizeMax / sizeRange, 1);
+      var padding = size * (settings("textNodePadding") || 1.5);
 
       // Update the positions and sizes of the text/rectangle as
       // the user moves the graph around.
       text.setAttributeNS(null, "font-size", size.toString());
       var textSize = text.getBBox();
-      text.setAttributeNS(null, "x", (node[prefix + "x"] - textSize.width / 2).toString());
-      text.setAttributeNS(null, "y", (node[prefix + "y"] + padding / 5).toString());
+      text.setAttributeNS(null, "x", node[prefix + "x"] - textSize.width / 2);
+      text.setAttributeNS(null, "y", node[prefix + "y"] + padding / 5);
 
       node["x-pos"] = node[prefix + "x"] - (textSize.width + padding) / 2;
       node["y-pos"] = node[prefix + "y"] - (textSize.height + padding) / 2;
