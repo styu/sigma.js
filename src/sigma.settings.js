@@ -120,6 +120,9 @@
     canvasEdgesBatchSize: 500,
     webglEdgesBatchSize: 1000,
     directedGraphArrowRatio: 4,
+    textNodeMaxSize: 16,
+    textNodeRangeSize: 8,
+    textNodePadding: 1.5
 
 
 
