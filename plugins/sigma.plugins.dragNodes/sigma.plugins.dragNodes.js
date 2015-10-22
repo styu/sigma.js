@@ -253,9 +253,12 @@
         xDiff = ref[1].x - ref[0].x;
 
         // Applying linear interpolation.
-        if (renXDiff === 0 && xDiff === 0) {
-          // if both are equal to 0, use 1 as the division result
-          x = x - ref[0].renX + ref[0].x;
+        // if the nodes are on top of each other, we use the camera ratio to interpolate
+        if (ref[0].x === ref[1].x && ref[0].y === ref[1].y) {
+          var xRatio = (ref[0].renX === 0) ? 1 : ref[0].renX;
+          var yRatio = (ref[0].renY === 0) ? 1 : ref[0].renY;
+          x = (ref[0].x / xRatio) * (x - ref[0].renX) + ref[0].x;
+          y = (ref[0].y / yRatio) * (y - ref[0].renY) + ref[0].y;
         } else {
           // use a really small number
           if (renXDiff === 0) {
