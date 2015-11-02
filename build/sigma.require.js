@@ -2967,7 +2967,7 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     //          the "font" value.
     hoverFont: '',
     // {boolean} If true, then only one node can be hovered at a time.
-    singleHover: false,
+    singleHover: true,
     // {string} Example: 'bold'
     hoverFontStyle: '',
     // {string} Indicates how to choose the hovered nodes shadow color.
@@ -3017,7 +3017,10 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
     //           several frames.
     canvasEdgesBatchSize: 500,
     webglEdgesBatchSize: 1000,
-
+    directedGraphArrowRatio: 4,
+    textNodeMaxSize: 16,
+    textNodeRangeSize: 8,
+    textNodePadding: 1.5,
 
 
 
@@ -3405,25 +3408,27 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
      */
     var settings = function(a1, a2) {
       var o,
+          i,
+          l,
           k;
 
       if (arguments.length === 1 && typeof a1 === 'string') {
-        if ((a1 in data) && data[a1] !== undefined)
+        if (data[a1] !== undefined)
           return data[a1];
         for (i = 0, l = datas.length; i < l; i++)
-          if ((a1 in datas[i]) && datas[i][a1] !== undefined)
+          if (datas[i][a1] !== undefined)
             return datas[i][a1];
         return undefined;
       } else if (typeof a1 === 'object' && typeof a2 === 'string') {
-        return a2 in (a1 || {}) ? a1[a2] : settings(a2);
+        return (a1 || {})[a2] !== undefined ? a1[a2] : settings(a2);
       } else {
         o = (typeof a1 === 'object' && a2 === undefined) ? a1 : {};
 
         if (typeof a1 === 'string')
           o[a1] = a2;
 
-        for (k in o)
-          data[k] = o[k];
+        for (i = 0, k = Object.keys(o), l = k.length; i < l; i++)
+          data[k[i]] = o[k[i]];
 
         return this;
       }
@@ -4428,7 +4433,9 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
         l,
         node,
         cos = Math.cos(this.angle),
-        sin = Math.sin(this.angle);
+        sin = Math.sin(this.angle),
+        nodeRatio = Math.pow(this.ratio, this.settings('nodesPowRatio')),
+        edgeRatio = Math.pow(this.ratio, this.settings('edgesPowRatio'));
 
     for (i = 0, l = nodes.length; i < l; i++) {
       node = nodes[i];
@@ -4444,13 +4451,13 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
         ) / this.ratio + (options.height || 0) / 2;
       node[write + 'size'] =
         (node[read + 'size'] || 0) /
-        Math.pow(this.ratio, this.settings('nodesPowRatio'));
+        nodeRatio;
     }
 
     for (i = 0, l = edges.length; i < l; i++) {
       edges[i][write + 'size'] =
         (edges[i][read + 'size'] || 0) /
-        Math.pow(this.ratio, this.settings('edgesPowRatio'));
+        edgeRatio;
     }
 
     return this;
@@ -4821,11 +4828,10 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       var axis = this.axis(c1, c2),
           col = true;
 
-      for (var i = 0; i < 4; i++) {
-        col *= this.axisCollision(axis[i], c1, c2);
-      }
+      for (var i = 0; i < 4; i++)
+        col = col && this.axisCollision(axis[i], c1, c2);
 
-      return !!col;
+      return col;
     }
   };
 
@@ -5612,11 +5618,10 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
       var axis = this.axis(c1, c2),
           col = true;
 
-      for (var i = 0; i < 4; i++) {
-        col *= this.axisCollision(axis[i], c1, c2);
-      }
+      for (var i = 0; i < 4; i++)
+        col = col && this.axisCollision(axis[i], c1, c2);
 
-      return !!col;
+      return col;
     }
   };
 
@@ -12160,6 +12165,9 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
 
         self.dispatchEvent('rightClick', e.data);
 
+        nodes = getNodes(e);
+        edges = getEdges(e);
+
         if (nodes.length) {
           self.dispatchEvent('rightClickNode', {
             node: nodes[0],
@@ -12211,12 +12219,12 @@ PointerEventsPolyfill.prototype.register_mouse_events = function() {
 
         overEdges = {};
         // Dispatch both single and multi events:
-        for (i = 0, l = outEdges.length; i < le; i++)
+        for (i = 0, le = outEdges.length; i < le; i++)
           self.dispatchEvent('outEdge', {
             edge: outEdges[i],
             captor: e.data
           });
-        if (outNodes.length)
+        if (outEdges.length)
           self.dispatchEvent('outEdges', {
             edges: outEdges,
             captor: e.data
