@@ -126,7 +126,7 @@
     directedGraphArrowRatio: 4,
     textNodeMaxSize: 16,
     textNodeRangeSize: 8,
-    textNodePadding: 1.5
+    textNodePadding: 1.5,
 
 
 
