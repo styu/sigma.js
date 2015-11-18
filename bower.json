@@ -9,8 +9,10 @@
     "build/sigma.min.js",
     "build/plugins/sigma.exporters.svg.min.js",
     "build/plugins/sigma.layout.forceAtlas2.min.js",
+    "build/plugins/sigma.parsers.cypher.min.js",
     "build/plugins/sigma.parsers.gexf.min.js",
     "build/plugins/sigma.parsers.json.min.js",
+    "build/plugins/sigma.pathfinding.astar.min.js",
     "build/plugins/sigma.plugins.animate.min.js",
     "build/plugins/sigma.plugins.dragNodes.min.js",
     "build/plugins/sigma.plugins.filter.min.js",
@@ -19,6 +21,7 @@
     "build/plugins/sigma.renderers.customEdgeShapes.min.js",
     "build/plugins/sigma.renderers.customShapes.min.js",
     "build/plugins/sigma.renderers.edgeLabels.min.js",
+    "build/plugins/sigma.renderers.parallelEdges.min.js",
     "build/plugins/sigma.renderers.snapshot.min.js",
     "build/plugins/sigma.statistics.HITS.min.js"
   ],
